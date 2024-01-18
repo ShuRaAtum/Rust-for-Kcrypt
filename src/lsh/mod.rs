@@ -1,3 +1,3 @@
 mod lsh;
 
-pub use lsh::Hash256;
+pub use lsh::LSH_TEST;

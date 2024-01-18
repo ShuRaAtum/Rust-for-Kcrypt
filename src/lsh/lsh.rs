@@ -45,9 +45,38 @@ struct hashState256{
     Last256: [u8; 128]
 }
 
-pub fn Hash256(){
+pub fn LSH_TEST(){
     println!("start");
-    let mut State256 = hashState256 {
+
+    // let databitlen256: [u32; 10] = [ 0, 1, 2, 7, 8, 15, 16, 1023, 1024, 1025 ];
+    let databitlen256: [u32; 2] = [ 0, 1 ];
+    for i in databitlen256{
+        // Create Test Vector
+        let mut data: Vec<u8> = Vec::new();
+        
+        println!("Input Message Length in Bits : {}", i);
+        println!("Input Message :");
+        for l in 0..i{
+           data.push(l as u8);
+           print!("{:#04x} ", data[l as usize]);
+        }
+        println!();println!();
+
+        // Start Hash Function
+        let mut hash: [u8; 64] = [0; 64];
+        Hash256(256, data, i as u64, &mut hash);
+
+        println!("Hash Value: ");
+        for i in hash{
+            print!("{:#02x} ", i);
+        }
+    }
+    
+
+}
+
+fn Hash256(hashbitlen: u64, data: Vec<u8>, databitlen: u64, hashval: &mut [u8]){
+    let mut state = hashState256 {
         hashbitlen: 0,
         cv256: [0; 16],
         Last256: [0; 128]
@@ -56,16 +85,13 @@ pub fn Hash256(){
     // @TODO Error check
 
     //ret = Init256(&state, hashbitlen);
-    let ret = Init256(&mut State256, 256);
+    let ret = Init256(&mut state, 256);
 
     //Update256(&state, data, databitlen);	
-    let mut m: [u32; (16*(NS256+1))as usize] = [0; (16*(NS256+1)) as usize];
-    let a: [u8; 8] = [0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07];
-    u8tou32(&mut m, &a);
-    println!("m[0] = {:#X}, m[1] = {:#X}", m[0], m[1]);
+    Update256(&mut state, data, databitlen);
 
 	//Final256(&state, hashval);
-
+    Final256(&mut state, hashval);
 }
 
 fn Init256(state: &mut hashState256, hashbitlen: u64) -> u32{
@@ -138,10 +164,8 @@ fn Init256(state: &mut hashState256, hashbitlen: u64) -> u32{
     1
 }
 
-
-fn u8tou32(output: &mut [u32], input: &[u8]){
-    let loop_num: usize = input.len() / 4;
-    for i in 0..loop_num {
+fn u8tou32(output: &mut [u32], input: &[u8]) {
+    for i in 0..32 {
         output[i] = (input[i*4] as u32) | 
             ((input[i*4 + 1] as u32) << 8) | 
             ((input[i*4 + 2] as u32) << 16) | 
@@ -149,17 +173,138 @@ fn u8tou32(output: &mut [u32], input: &[u8]){
     }
 }
 
-// fn compress256(state: &mut hashState256, datablock: &[u8]){
-    
-    
-// }
+fn compress256(state: &mut hashState256, datablock: &[u8]){
+    let mut m: [u32; (16*(NS256+1))as usize] = [0; (16*(NS256+1)) as usize];
 
-// fn Update256(state: &mut hashState256, data: &[u8], databitlen: u64) {
-//     let numBlocks: u64 = (databitlen>>10) + 1;
-//     compress256(state, data);
-//     // for i in 0..(numBlock-1) {
+    u8tou32(&mut m, &datablock);
+
+    for j in 2..(NS256+1){
+        let k = 16*j;
+        m[(k +  0) as usize] = m[(k - 16) as usize].wrapping_add(m[(k - 29) as usize]);
+		m[(k +  1) as usize] = m[(k - 15) as usize].wrapping_add(m[(k - 30) as usize]);
+		m[(k +  2) as usize] = m[(k - 14) as usize].wrapping_add(m[(k - 32) as usize]);
+		m[(k +  3) as usize] = m[(k - 13) as usize].wrapping_add(m[(k - 31) as usize]);
+		m[(k +  4) as usize] = m[(k - 12) as usize].wrapping_add(m[(k - 25) as usize]);
+		m[(k +  5) as usize] = m[(k - 11) as usize].wrapping_add(m[(k - 28) as usize]);
+		m[(k +  6) as usize] = m[(k - 10) as usize].wrapping_add(m[(k - 27) as usize]);
+		m[(k +  7) as usize] = m[(k -  9) as usize].wrapping_add(m[(k - 26) as usize]);
+		m[(k +  8) as usize] = m[(k -  8) as usize].wrapping_add(m[(k - 21) as usize]);
+		m[(k +  9) as usize] = m[(k -  7) as usize].wrapping_add(m[(k - 22) as usize]);
+		m[(k + 10) as usize] = m[(k -  6) as usize].wrapping_add(m[(k - 24) as usize]);
+		m[(k + 11) as usize] = m[(k -  5) as usize].wrapping_add(m[(k - 23) as usize]);
+		m[(k + 12) as usize] = m[(k -  4) as usize].wrapping_add(m[(k - 17) as usize]);
+		m[(k + 13) as usize] = m[(k -  3) as usize].wrapping_add(m[(k - 20) as usize]);
+		m[(k + 14) as usize] = m[(k -  2) as usize].wrapping_add(m[(k - 19) as usize]);
+		m[(k + 15) as usize] = m[(k -  1) as usize].wrapping_add(m[(k - 18) as usize]);
+    }
+
+    
+    for j in 0..NS256/2 {
+        {
+            let mut T: [u32; 16] = [0; 16];
+            let k = 2*j;
         
+            for l in 0..8{
+                let mut vl = state.cv256[l] ^ m[(16*k)as usize + l];
+                let mut vr = state.cv256[l+8] ^ m[(16*k)as usize + (l+8)];
+                vl = vl.wrapping_add(vr).rotate_left(29) ^ SC256[k as usize][l];
+                vr = vr.wrapping_add(vl).rotate_left(1);
+                T[l] = vr.wrapping_add(vl);
+                T[l+8] = vr.rotate_left(GAMMA256[l] as u32);
+            }
 
-//     // }
-// }
+            state.cv256[0] = T[ 6];state.cv256[ 8] = T[ 2];
+            state.cv256[1] = T[ 4];state.cv256[ 9] = T[ 0];
+            state.cv256[2] = T[ 5];state.cv256[10] = T[ 1];
+            state.cv256[3] = T[ 7];state.cv256[11] = T[ 3];
+            state.cv256[4] = T[12];state.cv256[12] = T[ 8];
+            state.cv256[5] = T[15];state.cv256[13] = T[11];
+            state.cv256[6] = T[14];state.cv256[14] = T[10];
+            state.cv256[7] = T[13];state.cv256[15] = T[ 9];
+        }
+        {
+            let mut T: [u32; 16] = [0; 16];
+            let k = 2*j+1;
 
+            for l in 0..8{
+                let mut vl = state.cv256[l] ^ m[(16*k)as usize + l];
+                let mut vr = state.cv256[l+8] ^ m[(16*k)as usize + (l+8)];
+                vl = vl.wrapping_add(vr).rotate_left(5) ^ SC256[k as usize][l];
+                vr = vr.wrapping_add(vl).rotate_left(17);
+                T[l] = vr.wrapping_add(vl);
+                T[l+8] = vr.rotate_left(GAMMA256[l] as u32);
+            }
+
+            state.cv256[0] = T[ 6];state.cv256[ 8] = T[ 2];
+            state.cv256[1] = T[ 4];state.cv256[ 9] = T[ 0];
+            state.cv256[2] = T[ 5];state.cv256[10] = T[ 1];
+            state.cv256[3] = T[ 7];state.cv256[11] = T[ 3];
+            state.cv256[4] = T[12];state.cv256[12] = T[ 8];
+            state.cv256[5] = T[15];state.cv256[13] = T[11];
+            state.cv256[6] = T[14];state.cv256[14] = T[10];
+            state.cv256[7] = T[13];state.cv256[15] = T[ 9];
+        }
+    }
+
+    for l in 0..16{
+        state.cv256[l] ^= m[(16*NS256)as usize + l];
+    }
+}
+
+fn memset(output: &mut [u8]){
+    output.fill(0);
+}
+
+fn Update256(state: &mut hashState256, data: Vec<u8>, databitlen: u64) {
+    let numBlocks: u64 = (databitlen>>10) + 1;
+    
+    for i in 0..numBlocks-1{
+        compress256(state, &data[(i*128)as usize..(i*128+128)as usize]);
+    }
+
+    // println!("state.cv = ");
+    // let mut a=0;
+    // for i in state.cv256 {
+    //     if a%4==0{
+    //         println!();
+    //     }
+    //     print!("{:#010x} ", i);
+    //     a+=1;
+    // } println!();
+    if (databitlen & 0x3ff) != 0 {
+        let temp: u64 = (numBlocks-1)<<7;
+        let pos1: u32 = ((databitlen>>3).wrapping_sub(temp)) as u32;
+        let pos2: u32 = (databitlen & 0x7) as u32;
+
+        if pos2 != 0 {
+            state.Last256.clone_from_slice(&data[0..pos1 as usize]);
+            state.Last256[pos1 as usize] = data[pos1 as usize]&(0xff << (8-pos2)) ^ (1<<(7-pos2));
+            if pos1 != 127 {
+                memset(&mut state.Last256[(pos1+1)as usize ..]);
+            }
+        } else {
+            state.Last256.clone_from_slice(&data[0..pos1 as usize]);
+            state.Last256[pos1 as usize] = 0x80;
+            if pos1 != 127 {
+                memset(&mut state.Last256[(pos1+1)as usize ..]);
+            }
+        }
+    } else {
+        state.Last256[0] = 0x80;
+        memset(&mut state.Last256[1..]);
+    }
+}
+
+
+fn Final256(state: &mut hashState256, hashval: &mut [u8]){
+    let mut H: [u32; 8] = [0; 8];
+    compress256(state, &state.Last256.clone());
+
+    for l in 0..8 {
+        H[l] = state.cv256[l] ^ state.cv256[l+8];
+    }
+
+    for l in 0..(state.hashbitlen)>>3 {
+        hashval[l as usize] = (H[(l>>2) as usize] >> ((l<<3)&0x1f)) as u8;
+    }
+}
