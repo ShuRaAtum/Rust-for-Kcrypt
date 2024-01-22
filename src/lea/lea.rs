@@ -90,7 +90,7 @@ fn enc(x: &mut [u32; 4], rk: &[u32; 192]) {
 }
 
 
-fn main() {
+pub fn LEA_TSET() {
     let mut round_key: [u32; 192] = [0; 192];
 
     println!("plain text u32");
