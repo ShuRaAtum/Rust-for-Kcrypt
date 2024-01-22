@@ -9,7 +9,7 @@ mod lea;
 
 fn main() {
     // seed::SEED_TEST();
-    lsh::LSH_TEST();
+    // lsh::LSH_TEST();
     // hight::HIGHT_TEST();
-    // lea::LEA_TEST();
+    lea::LEA_TEST();
 }

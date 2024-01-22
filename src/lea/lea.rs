@@ -1,7 +1,5 @@
 const KEY_CONST: [u32; 8] = [0xc3efe9db, 0x44626b02, 0x79e27c8a, 0x78df30ec, 0x715ea49e, 0xc785da0a, 0xe04ef22a, 0xe5c40957 ];
 // const ROUND_KEY: [u32; 192] = [0; 192];
-const MASTER_KEY: [u32; 4] = [0x3C2D1E0F, 0x78695A4B, 0xB4A59687, 0xF0E1D2C3]; //128-bit
-const PLAIN_TEXT: [u32; 4] = [0x13121110, 0x17161514, 0x1B1A1918, 0x1F1E1D1C]; //128-bit
 
 fn rol(x: u32, n: u8) -> u32 {
     x.rotate_left(u32::from(n))
@@ -90,8 +88,10 @@ fn enc(x: &mut [u32; 4], rk: &[u32; 192]) {
 }
 
 
-pub fn LEA_TSET() {
+pub fn LEA_TEST() {
     let mut round_key: [u32; 192] = [0; 192];
+    let MASTER_KEY: [u32; 4] = [0x3C2D1E0F, 0x78695A4B, 0xB4A59687, 0xF0E1D2C3]; //128-bit
+    let mut PLAIN_TEXT: [u32; 4] = [0x13121110, 0x17161514, 0x1B1A1918, 0x1F1E1D1C]; //128-bit
 
     println!("plain text u32");
     for i in 0..4{

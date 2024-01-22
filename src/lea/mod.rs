@@ -1,3 +1,3 @@
 mod lea;
 
-pub use lea::LEA_TSET;
+pub use lea::LEA_TEST;
