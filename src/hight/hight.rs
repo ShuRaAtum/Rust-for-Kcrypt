@@ -184,7 +184,7 @@ fn dec_final_transformation(pt:&mut[u8; 8], rk:&mut [u8; 136]) {
     
 }
 
-fn main() {
+pub fn HIGHT_TEST() {
 
     let mut rk: [u8; 136] = [0; 136];
     let mk: [u8; 16] = [0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff];
@@ -231,10 +231,9 @@ fn main() {
     final_transformation(&mut pt, &mut rk);
 
     println!("Encyrption...");
-
     for i in 0..8 {
-        println!("{:x}", pt[i]);
-    }
+        print!("{:x}", pt[i]);
+    } println!();
 
     // Decryption
     dec_initial_transformation(&mut pt, &mut rk);
@@ -274,9 +273,9 @@ fn main() {
 
     dec_final_transformation(&mut pt, &mut rk);
 
+    println!();
     println!("Decyrption...");
-
     for i in 0..8 {
-        println!("{:x}", pt[i]);
-    }
+        print!("{:x}", pt[i]);
+    } println!();     println!();
 }
