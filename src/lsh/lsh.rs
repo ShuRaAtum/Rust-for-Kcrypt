@@ -45,26 +45,31 @@ struct hashState256{
     Last256: [u8; 128]
 }
 
-fn print_array<T: std::fmt::UpperHex>(state: &[T], str: String) {
-    println!("{str} : ");
-    if str == "Lash256"{
+fn print_array<T: std::fmt::UpperHex>(state: &[T], str: &str, ui: &str) {
+    print!("\n{str} : ");
+    if ui == "u8"{
+        let mut a = 0;
         for i in state {
-            print!("{:#04X}", i);
+            if a%4==0 { println!(); }
+            print!("{:#04X} ", i);
+            a += 1;
         }
     } else {
+        let mut a = 0;
         for i in state {
-            print!("{:#010X}", i);
+            if a%4==0 { println!(); }
+            print!("{:#010X} ", i);
+            a += 1;
         }
     }
-
-    
+    println!();
 }
 
 pub fn LSH_TEST(){
-    println!("start");
+    println!("LSH 256-256 TEST");
 
-    // let databitlen256: [u32; 16] = [ 0, 1, 2, 7, 8, 15, 16, 1023, 1024, 1025, 1024 * 2 - 1, 1024 * 2, 1024 * 2 + 1, 1024 * 3 - 1, 1024 * 3, 1024 * 3 + 1];
-    let databitlen256: [u32; 5] = [ 0, 1024, 1025, 1024 * 2 - 1, 1024 * 3 + 1 ];
+    let databitlen256: [u32; 16] = [ 0, 1, 2, 7, 8, 15, 16, 1023, 1024, 1025, 1024 * 2 - 1, 1024 * 2, 1024 * 2 + 1, 1024 * 3 - 1, 1024 * 3, 1024 * 3 + 1];
+    // let databitlen256: [u32; 5] = [ 0, 1024, 1025, 1024 * 2 - 1, 1024 * 3 + 1 ];
     for i in databitlen256{
         // Create Test Vector
         let mut data: Vec<u8> = Vec::new();
@@ -75,7 +80,7 @@ pub fn LSH_TEST(){
         println!("Input Message :");
         for l in 0..datalen{
            data.push(l as u8);
-        //    print!("{:#04x} ", data[l as usize]);
+           print!("{:#04x} ", data[l as usize]);
         }
         println!();
 
@@ -106,17 +111,14 @@ fn Hash256(hashbitlen: u64, data: Vec<u8>, databitlen: u64, hashval: &mut [u8]){
 
     //Update256(&state, data, databitlen);	
     Update256(&mut state, data, databitlen);
+    // print_array(&state.cv256, "cv256", "u32");
+    // print_array(&state.Last256, "Last256", "u8");
 
 	//Final256(&state, hashval);
     Final256(&mut state, hashval);
 }
 
 fn Init256(state: &mut hashState256, hashbitlen: u64) -> u32{
-    println!();
-    //state.cv256.fill(0);
-    
-    println!("Start Function of Init256");
-    
     if hashbitlen>256{
         return 0
     }
@@ -172,11 +174,6 @@ fn Init256(state: &mut hashState256, hashbitlen: u64) -> u32{
     }
 
     state.hashbitlen = hashbitlen;
-
-    // println!("Check state.cv256 values");
-    // for i in state.cv256{
-    //     print!("{:#X} ", i);
-    // } println!();
 
     1
 }
@@ -274,34 +271,32 @@ fn memset(output: &mut [u8]){
 
 fn Update256(state: &mut hashState256, data: Vec<u8>, databitlen: u64) {
     let numBlocks: u64 = (databitlen>>10) + 1;
-    
+    let mut index: usize = 0;
     for i in 0..numBlocks-1{
         compress256(state, &data[(i*128)as usize..(i*128+128)as usize]);
+        index+=128;
     }
 
-    // println!("state.cv = ");
-    // let mut a=0;
-    // for i in state.cv256 {
-    //     if a%4==0{
-    //         println!();
-    //     }
-    //     print!("{:#010x} ", i);
-    //     a+=1;
-    // } println!();
     if (databitlen & 0x3ff) != 0 {
         let temp: u64 = (numBlocks-1)<<7;
         let pos1: u32 = ((databitlen>>3).wrapping_sub(temp)) as u32;
         let pos2: u32 = (databitlen & 0x7) as u32;
 
-        println!("pos1 = {pos1} / pos2 = {pos2}");
+        let temp_data = &data[index..];
+
         if pos2 != 0 {
-            state.Last256[0..pos1 as usize].clone_from_slice(&data[0..pos1 as usize]);
-            state.Last256[pos1 as usize] = data[pos1 as usize]&(0xff << (8-pos2)) ^ (1<<(7-pos2));
+            if temp_data.len() != 0
+            { 
+                state.Last256[0..pos1 as usize].clone_from_slice(&temp_data[0..pos1 as usize]);
+                state.Last256[pos1 as usize] = (temp_data[pos1 as usize]&(0xff << (8-pos2))) ^ (1<<(7-pos2)); 
+            }
             if pos1 != 127 {
                 memset(&mut state.Last256[(pos1+1)as usize ..]);
             }
         } else {
-            state.Last256[0..pos1 as usize].clone_from_slice(&data[0..pos1 as usize]);
+            if temp_data.len() != 0{
+                state.Last256[0..pos1 as usize].clone_from_slice(&temp_data[0..pos1 as usize]);
+            }
             state.Last256[pos1 as usize] = 0x80;
             if pos1 != 127 {
                 memset(&mut state.Last256[(pos1+1)as usize ..]);
@@ -318,16 +313,6 @@ fn Final256(state: &mut hashState256, hashval: &mut [u8]){
     let mut H: [u32; 8] = [0; 8];
     compress256(state, &state.Last256.clone());
 
-    println!("state.cv = ");
-    let mut a=0;
-    for i in state.cv256 {
-        if a%4==0{
-            println!();
-        }
-        print!("{:#010x} ", i);
-        a+=1;
-    } println!();
-
     for l in 0..8 {
         H[l] = state.cv256[l] ^ state.cv256[l+8];
     }
@@ -335,6 +320,4 @@ fn Final256(state: &mut hashState256, hashval: &mut [u8]){
     for l in 0..(state.hashbitlen)>>3 {
         hashval[l as usize] = (H[(l>>2) as usize] >> ((l<<3)&0x1f)) as u8;
     }
-
-    print_array(&hashval);
 }
