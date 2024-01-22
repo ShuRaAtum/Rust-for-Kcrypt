@@ -8,6 +8,6 @@ mod hight;
 
 fn main() {
     // seed::SEED_TEST();
-    // lsh::LSH_TEST();
-    hight::HIGHT_TEST();
+    lsh::LSH_TEST();
+    // hight::HIGHT_TEST();
 }

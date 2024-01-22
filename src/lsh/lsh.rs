@@ -45,6 +45,21 @@ struct hashState256{
     Last256: [u8; 128]
 }
 
+fn print_array<T: std::fmt::UpperHex>(state: &[T], str: String) {
+    println!("{str} : ");
+    if str == "Lash256"{
+        for i in state {
+            print!("{:#04X}", i);
+        }
+    } else {
+        for i in state {
+            print!("{:#010X}", i);
+        }
+    }
+
+    
+}
+
 pub fn LSH_TEST(){
     println!("start");
 
@@ -320,4 +335,6 @@ fn Final256(state: &mut hashState256, hashval: &mut [u8]){
     for l in 0..(state.hashbitlen)>>3 {
         hashval[l as usize] = (H[(l>>2) as usize] >> ((l<<3)&0x1f)) as u8;
     }
+
+    print_array(&hashval);
 }
