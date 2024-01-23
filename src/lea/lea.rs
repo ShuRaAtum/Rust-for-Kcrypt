@@ -149,7 +149,7 @@ fn dec(x: &mut [u32; 4], rk: &[u32; 192])->[u32;4]  {
     *x
 }
 
-fn main() {
+pub fn LEA_TEST() {
     let mut plain_text: [u32; 4] = [0x13121110, 0x17161514, 0x1B1A1918, 0x1F1E1D1C]; //128-bit
     let mut enc_round_key: [u32; 192] = [0; 192];
     let mut dec_round_key: [u32; 192] = [0; 192];
