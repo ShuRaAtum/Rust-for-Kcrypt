@@ -16,12 +16,11 @@ fn enc_round_key_gen(mk: &[u32; 4], rk: &mut [u32; 192]) {
     println!("enc_Round_key_gen start : ");
     println!("ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ ");
     // print!("SecretKey in Round_key_gen : ");
-    // for i in 0..4 {
-    //     temp[i] = mk[i];
-    //
+    for i in 0..4 {
+        temp[i] = mk[i];
+    
     //     print!("0x{:08X} ", temp[i]);
-    // }
-    println!();
+    }
     for i in 0..24 {
         temp[0] = rol(temp[0].wrapping_add(rol(KEY_CONST[i % 4], i as u8)), 1);
         temp[1] = rol(temp[1].wrapping_add(rol(KEY_CONST[i % 4], (i + 1) as u8)), 3);
@@ -41,12 +40,11 @@ fn dec_round_key_gen(mk: &[u32; 4], rk: &mut [u32; 192]) {
     println!("dec_Round_key_gen start : ");
     println!("ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ ");
     // print!("SecretKey in Round_key_gen : ");
-    // for i in 0..4 {
-    //     temp[i] = mk[i];
-    //
+    for i in 0..4 {
+        temp[i] = mk[i];
+    
     //     print!("0x{:08X} ", temp[i]);
-    // }
-    // println!();
+    }
     for i in 0..24 {
         temp[0] = rol(temp[0].wrapping_add(rol(KEY_CONST[i % 4], i as u8)), 1);
         temp[1] = rol(temp[1].wrapping_add(rol(KEY_CONST[i % 4], (i + 1) as u8)), 3);
