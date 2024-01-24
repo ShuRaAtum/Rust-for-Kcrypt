@@ -111,8 +111,6 @@ fn Hash256(hashbitlen: u64, data: Vec<u8>, databitlen: u64, hashval: &mut [u8]){
 
     //Update256(&state, data, databitlen);	
     Update256(&mut state, data, databitlen);
-    // print_array(&state.cv256, "cv256", "u32");
-    // print_array(&state.Last256, "Last256", "u8");
 
 	//Final256(&state, hashval);
     Final256(&mut state, hashval);
